@@ -1,19 +1,19 @@
 {
-  "name": "oat-sa/lib-em-php-lti-client",
-  "minimum-stability": "dev",
-  "repositories": [
-    {
-      "type": "vcs",
-      "url": "https://github.com/oat-sa/lib-em-php-lti-events"
+    "name": "oat-sa/lib-em-php-lti-client",
+    "minimum-stability": "dev",
+    "repositories": [
+        {
+            "type": "path",
+            "url": "https://github.com/oat-sa/lib-em-php-lti-events"
+        }
+    ],
+    "require": {
+        "oat-sa/lib-em-php-lti-events": "*",
+        "guzzlehttp/guzzle": "7.4.x-dev"
+    },
+    "autoload": {
+        "psr-4": {
+            "OAT\\Library\\EnvironmentManagementLtiClient\\": "src/"
+        }
     }
-  ],
-  "require": {
-    "oat-sa/lib-em-php-lti-events": "*",
-    "guzzlehttp/guzzle": "7.4.x-dev"
-  },
-  "autoload": {
-    "psr-4": {
-      "OAT\\Library\\EnvironmentManagementLtiClient\\": "src/"
-    }
-  }
 }
