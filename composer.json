@@ -4,7 +4,7 @@
     "repositories": [
         {
             "type": "path",
-            "url": "../lib-em-php-lti-events"
+            "url": "https://github.com/oat-sa/lib-em-php-lti-events"
         }
     ],
     "require": {
