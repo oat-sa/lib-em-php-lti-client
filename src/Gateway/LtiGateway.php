@@ -4,36 +4,51 @@ declare(strict_types=1);
 
 namespace OAT\Library\EnvironmentManagementLtiClient\Gateway;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\ClientInterface;
+use InvalidArgumentException;
+use OAT\Library\EnvironmentManagementLtiClient\Exception\LtiGatewayException;
 use OAT\Library\EnvironmentManagementLtiEvents\Event\EventInterface;
 use OAT\Library\EnvironmentManagementLtiEvents\Factory\LtiSerializerFactory;
-use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\ResponseInterface;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\SerializerInterface;
+use Throwable;
 
-class LtiGateway
+class LtiGateway implements LtiGatewayInterface
 {
-    private SerializerInterface $ltiSerializer;
-
     public function __construct(
-        private ClientInterface $client,
         private string $ltiGatewayUrl,
-        LtiSerializerFactory $ltiSerializerFactory,
-        SerializerInterface $ltiSerializer = null,
+        private ?ClientInterface $client = null,
+        private ?SerializerInterface $ltiSerializer = null
     ) {
-        $this->ltiSerializer = $ltiSerializer ?? $ltiSerializerFactory->create();
+        if (empty($this->ltiGatewayUrl)) {
+            throw new InvalidArgumentException('Lti Gateway Url cannot be empty.');
+        }
+
+        $this->client = $client ?? new Client();
+        $this->ltiSerializer = $ltiSerializer ?? LtiSerializerFactory::create();
     }
 
     public function send(EventInterface $event): ResponseInterface
     {
-        return $this->client->request(
-            'POST',
-            sprintf('%s/api/v1/lti/events', $this->ltiGatewayUrl),
-            [
-                'headers' => [
-                    'Content-Type' => 'application/json',
+        try {
+            return $this->client->request(
+                'POST',
+                sprintf('%s/api/v1/lti/events', $this->ltiGatewayUrl),
+                [
+                    'headers' => [
+                        'Content-Type' => 'application/json',
+                    ],
+                    'body' => $this->ltiSerializer->serialize($event, JsonEncoder::FORMAT),
                 ],
-                'body' => $this->ltiSerializer->serialize($event, 'json'),
-            ],
-        );
+            );
+        } catch (Throwable $exception) {
+            throw new LtiGatewayException(
+                sprintf('Cannot perform request: %s', $exception->getMessage()),
+                $exception->getCode(),
+                $exception
+            );
+        }
     }
 }
