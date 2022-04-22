@@ -6,28 +6,23 @@ namespace OAT\Library\EnvironmentManagementLtiClient\Client;
 
 use GuzzleHttp\Psr7\Response;
 use OAT\Library\EnvironmentManagementLtiClient\Exception\LtiCoreClientException;
-use OAT\Library\EnvironmentManagementLtiClient\Gateway\LtiGateway;
+use OAT\Library\EnvironmentManagementLtiClient\Exception\LtiGatewayException;
+use OAT\Library\EnvironmentManagementLtiClient\Gateway\LtiGatewayInterface;
 use OAT\Library\EnvironmentManagementLtiEvents\Event\Core\RequestEvent;
 use OAT\Library\EnvironmentManagementLtiEvents\Factory\LtiSerializerFactory;
 use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 use Throwable;
 
-class LtiCoreClient
+class LtiCoreClient implements LtiCoreClientInterface
 {
-    private SerializerInterface $ltiSerializer;
-
     public function __construct(
-        private LtiGateway $ltiGateway,
-        LtiSerializerFactory $ltiSerializerFactory,
-        SerializerInterface $ltiSerializer = null,
+        private LtiGatewayInterface $ltiGateway,
+        private ?SerializerInterface $ltiSerializer = null
     ) {
-        $this->ltiSerializer = $ltiSerializer ?? $ltiSerializerFactory->create();
+        $this->ltiSerializer = $ltiSerializer ?? LtiSerializerFactory::create();
     }
 
-    /**
-     * @throws LtiCoreClientException
-     */
     public function request(
         string $registrationId,
         string $method,
@@ -39,25 +34,28 @@ class LtiCoreClient
 
         try {
             $response = $this->ltiGateway->send($event);
-        } catch (Throwable $exception) {
-            $this->throwException(RequestEvent::TYPE, $exception->getMessage(), $exception);
-        }
 
-        if ($response->getStatusCode() !== 200) {
-            $this->throwException(RequestEvent::TYPE, sprintf('Expected status code is %d, got %d', 200, $response->getStatusCode()));
-        }
+            if ($response->getStatusCode() !== 200) {
+                throw $this->createLtiCoreClientException(
+                    RequestEvent::TYPE,
+                    sprintf('Expected status code is %d, got %d', 200, $response->getStatusCode())
+                );
+            }
 
-        return $this->ltiSerializer->deserialize($response, Response::class, 'json');
+            return $this->ltiSerializer->deserialize($response, Response::class, 'json');
+        } catch (LtiGatewayException $exception) {
+            throw $this->createLtiCoreClientException(RequestEvent::TYPE, $exception->getMessage(), $exception);
+        }
     }
 
-    /**
-     * @throws LtiCoreClientException
-     */
-    private function throwException(string $eventType, string $reason, Throwable $previousException = null): void
-    {
-        throw new LtiCoreClientException(
+    private function createLtiCoreClientException(
+        string $eventType,
+        string $reason,
+        Throwable $previousException = null
+    ): LtiCoreClientException {
+        return new LtiCoreClientException(
             sprintf('Failed to trigger the following event: %s, reason: %s', $eventType, $reason),
-            $previousException !== null ? $previousException->getCode() : 0,
+            $previousException ? $previousException->getCode() : 0,
             $previousException
         );
     }

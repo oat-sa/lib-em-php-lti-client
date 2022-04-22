@@ -1,5 +1,7 @@
 {
   "name": "oat-sa/lib-em-php-lti-client",
+  "type": "library",
+  "license": "GPL-2.0-only",
   "minimum-stability": "dev",
   "repositories": [
     {
@@ -8,12 +10,25 @@
     }
   ],
   "require": {
+    "php": ">=8.0",
     "oat-sa/lib-em-php-lti-events": "*",
-    "guzzlehttp/guzzle": "7.4.x-dev"
+    "psr/http-message": "^1.0",
+    "guzzlehttp/guzzle": "^6.4|^7.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.5"
+  },
+  "config": {
+    "sort-packages": true
   },
   "autoload": {
     "psr-4": {
       "OAT\\Library\\EnvironmentManagementLtiClient\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "OAT\\Library\\EnvironmentManagementLtiClient\\Tests\\": "tests/"
     }
   }
 }
