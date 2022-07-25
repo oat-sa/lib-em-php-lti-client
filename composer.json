@@ -10,7 +10,7 @@
     }
   ],
   "require": {
-    "php": ">=8.0",
+    "php": ">=7.4",
     "oat-sa/lib-em-php-lti-events": "*",
     "psr/http-message": "^1.0",
     "guzzlehttp/guzzle": "^6.4|^7.0"
