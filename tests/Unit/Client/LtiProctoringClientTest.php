@@ -32,6 +32,9 @@ use OAT\Library\EnvironmentManagementLtiEvents\Event\Ags\CreateLineItemEvent;
 use OAT\Library\EnvironmentManagementLtiEvents\Event\Proctoring\SendControlEvent;
 use OAT\Library\Lti1p3Ags\Model\LineItem\LineItem;
 use OAT\Library\Lti1p3Proctoring\Model\AcsControlInterface;
+use OAT\Library\Lti1p3Proctoring\Model\AcsControlResult;
+use OAT\Library\Lti1p3Proctoring\Model\AcsControlResultInterface;
+use OAT\Library\Lti1p3Proctoring\Serializer\AcsControlResultSerializerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -40,18 +43,24 @@ final class LtiProctoringClientTest extends TestCase
     use ClientTesterTrait;
 
     private LtiGatewayInterface|MockObject $gatewayMock;
+    private AcsControlResultSerializerInterface|MockObject $acsControlResultSerializerMock;
     private LtiProctoringClient $subject;
 
     protected function setUp(): void
     {
         $this->gatewayMock = $this->createMock(LtiGatewayInterface::class);
+        $this->acsControlResultSerializerMock = $this->createMock(AcsControlResultSerializerInterface::class);
 
-        $this->subject = new LtiProctoringClient($this->gatewayMock);
+        $this->subject = new LtiProctoringClient(
+            $this->gatewayMock,
+            $this->acsControlResultSerializerMock,
+        );
     }
 
     public function testSendControlForSuccess(): void
     {
         $acs = $this->createMock(AcsControlInterface::class);
+        $acsControlResult = new AcsControlResult(AcsControlResultInterface::STATUS_NONE, 123);
 
         $this->gatewayMock->expects($this->once())
             ->method('send')
@@ -62,12 +71,21 @@ final class LtiProctoringClientTest extends TestCase
                         && $acs === $event->getControl();
                 })
             )
-            ->willReturn($this->getResponseMock(201));
+            ->willReturn($this->getResponseMock(200, 1, '{}'));
 
-        $this->subject->sendControl('reg-1', $acs, 'http://example.url');
+        $this->acsControlResultSerializerMock->expects($this->once())
+            ->method('deserialize')
+            ->with('{}')
+            ->willReturn($acsControlResult);
+
+        $result = $this->subject->sendControl('reg-1', $acs, 'http://example.url');
+
+        $this->assertInstanceOf(AcsControlResultInterface::class, $result);
+        $this->assertSame(AcsControlResultInterface::STATUS_NONE, $result->getStatus());
+        $this->assertSame(123, $result->getExtraTime());
     }
 
-    public function testCreateLineItemThrowsExceptionWhenRequestFailed(): void
+    public function testSendControlThrowsExceptionWhenRequestFailed(): void
     {
         $acs = $this->createMock(AcsControlInterface::class);
 
@@ -81,7 +99,7 @@ final class LtiProctoringClientTest extends TestCase
         $this->subject->sendControl('reg-1', $acs, 'http://example.url');
     }
 
-    public function testCreateLineItemThrowsExceptionWhenUnexpectedStatusCodeReturned(): void
+    public function testSendControlThrowsExceptionWhenUnexpectedStatusCodeReturned(): void
     {
         $acs = $this->createMock(AcsControlInterface::class);
 
@@ -91,7 +109,7 @@ final class LtiProctoringClientTest extends TestCase
             ->willReturn($this->getResponseMock(400, 2));
 
         $this->expectException(LtiProctoringClientException::class);
-        $this->expectExceptionMessage('Failed to trigger the following event: proctoringSendControl, reason: Expected status code is 201, got 400');
+        $this->expectExceptionMessage('Failed to trigger the following event: proctoringSendControl, reason: Expected status code is 200, got 400');
 
         $this->subject->sendControl('reg-1', $acs, 'http://example.url');
     }
