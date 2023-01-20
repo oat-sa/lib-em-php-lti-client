@@ -27,10 +27,10 @@ class LtiProctoringClient implements LtiProctoringClientInterface
         try {
             $response = $this->ltiGateway->send($event);
 
-            if ($response->getStatusCode() !== 200) {
+            if ($response->getStatusCode() !== 201) {
                 throw $this->createLtiProctoringClientException(
                     SendControlEvent::TYPE,
-                    sprintf('Expected status code is %d, got %d', 200, $response->getStatusCode()
+                    sprintf('Expected status code is %d, got %d', 201, $response->getStatusCode()
                 ));
             }
 
