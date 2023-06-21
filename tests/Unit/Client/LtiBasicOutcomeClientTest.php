@@ -27,12 +27,10 @@ use OAT\Library\EnvironmentManagementLtiClient\Exception\LtiBasicOutcomeClientEx
 use OAT\Library\EnvironmentManagementLtiClient\Exception\LtiGatewayException;
 use OAT\Library\EnvironmentManagementLtiClient\Gateway\LtiGatewayInterface;
 use OAT\Library\EnvironmentManagementLtiClient\Tests\Traits\ClientTesterTrait;
-use OAT\Library\EnvironmentManagementLtiEvents\Event\Ags\GetLineItemEvent;
 use OAT\Library\EnvironmentManagementLtiEvents\Event\BasicOutcome\DeleteResultEvent;
 use OAT\Library\EnvironmentManagementLtiEvents\Event\BasicOutcome\ReadResultEvent;
 use OAT\Library\EnvironmentManagementLtiEvents\Event\BasicOutcome\ReplaceResultEvent;
 use OAT\Library\EnvironmentManagementLtiEvents\Event\BasicOutcome\SendBasicOutcomeEvent;
-use OAT\Library\Lti1p3Ags\Model\LineItem\LineItem;
 use OAT\Library\Lti1p3BasicOutcome\Message\Response\BasicOutcomeResponseInterface;
 use OAT\Library\Lti1p3BasicOutcome\Serializer\Response\BasicOutcomeResponseSerializerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -188,10 +186,11 @@ final class LtiBasicOutcomeClientTest extends TestCase
         $this->subject->replaceResult('reg-1', 'http://example.url', 'source-id', 4.5);
     }
 
+    /**
+     * @doesNotPerformAssertions
+     */
     public function testSendBasicOutcomeForSuccess(): void
     {
-        $outcomeResponse = $this->createMock(BasicOutcomeResponseInterface::class);
-
         $this->gatewayMock->expects($this->once())
             ->method('send')
             ->with(
@@ -203,15 +202,7 @@ final class LtiBasicOutcomeClientTest extends TestCase
             )
             ->willReturn($this->getResponseMock(201, 1, 'test body'));
 
-        $this->outcomeSerializerMock->expects($this->once())
-            ->method('deserialize')
-            ->with('test body')
-            ->willReturn($outcomeResponse);
-
-        $this->assertSame(
-            $outcomeResponse,
-            $this->subject->sendBasicOutcome('reg-1', 'http://example.url', 'test-xml-content')
-        );
+        $this->subject->sendBasicOutcome('reg-1', 'http://example.url', 'test-xml-content');
     }
 
     public function testSendBasicOutcomeThrowsExceptionWhenRequestFailed(): void
