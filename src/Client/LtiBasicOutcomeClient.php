@@ -75,15 +75,13 @@ class LtiBasicOutcomeClient implements LtiBasicOutcomeClientInterface
         string $registrationId,
         string $lisOutcomeServiceUrl,
         string $xml,
-    ): BasicOutcomeResponseInterface {
+    ): void {
         $event = new SendBasicOutcomeEvent($registrationId, $lisOutcomeServiceUrl, $xml);
 
         try {
             $response = $this->ltiGateway->send($event);
 
             $this->assertStatusCode($response, 201, SendBasicOutcomeEvent::TYPE);
-
-            return $this->basicOutcomeResponseSerializer->deserialize($response->getBody()->getContents());
         } catch (LtiGatewayException $exception) {
             throw $this->createLtiBasicOutcomeClientException(SendBasicOutcomeEvent::TYPE, $exception->getMessage(), $exception);
         }
