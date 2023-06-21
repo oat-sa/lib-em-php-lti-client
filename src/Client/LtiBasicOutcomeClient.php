@@ -81,7 +81,7 @@ class LtiBasicOutcomeClient implements LtiBasicOutcomeClientInterface
         try {
             $response = $this->ltiGateway->send($event);
 
-            $this->assertStatusCode($response, 200, SendBasicOutcomeEvent::TYPE);
+            $this->assertStatusCode($response, 201, SendBasicOutcomeEvent::TYPE);
 
             return $this->basicOutcomeResponseSerializer->deserialize($response->getBody()->getContents());
         } catch (LtiGatewayException $exception) {

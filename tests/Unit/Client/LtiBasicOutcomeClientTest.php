@@ -201,7 +201,7 @@ final class LtiBasicOutcomeClientTest extends TestCase
                         && 'test-xml-content' === $event->getXml();
                 })
             )
-            ->willReturn($this->getResponseMock(200, 1, 'test body'));
+            ->willReturn($this->getResponseMock(201, 1, 'test body'));
 
         $this->outcomeSerializerMock->expects($this->once())
             ->method('deserialize')
