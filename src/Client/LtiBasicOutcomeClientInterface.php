@@ -59,5 +59,5 @@ interface LtiBasicOutcomeClientInterface
         string $registrationId,
         string $lisOutcomeServiceUrl,
         string $xml,
-    ): BasicOutcomeResponseInterface;
+    ): void;
 }
