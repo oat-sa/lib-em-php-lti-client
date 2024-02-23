@@ -24,11 +24,12 @@ namespace OAT\Library\EnvironmentManagementLtiClient\Client;
 
 use OAT\Library\EnvironmentManagementLtiClient\Exception\LtiProctoringClientException;
 use OAT\Library\Lti1p3Proctoring\Model\AcsControlInterface;
+use OAT\Library\Lti1p3Proctoring\Model\AcsControlResultInterface;
 
 interface LtiProctoringClientInterface
 {
     /**
      * @throws LtiProctoringClientException
      */
-    public function sendControl(string $registrationId, AcsControlInterface $control, string $acsUrl): void;
+    public function sendControl(string $registrationId, AcsControlInterface $control, string $acsUrl): AcsControlResultInterface;
 }
